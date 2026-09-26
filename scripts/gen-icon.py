@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""生成 src/common/icon.png：黑底红色LED数码管图标，4x超采样抗锯齿+辉光。"""
+"""生成 src/common/icon.png：黑底红色LED数码管图标。
+
+特性：4x超采样抗锯齿 / 对角渐变金属表壳环 / 双层辉光(bloom) /
+对角玻璃反光 / 192x192 RGBA 圆角方块。
+用法：python3 scripts/gen-icon.py
+"""
 import struct
 import zlib
 
@@ -9,28 +14,23 @@ W = H = N * S              # 768x768 绘制画布
 
 # ---------- 基础绘图工具 ----------
 
-def rounded_rect_mask(x0, y0, x1, y1, r):
-    """判断点是否在圆角矩形内（逐像素）。"""
-    def inside(px, py, inset=0):
-        ix0, iy0, ix1, iy1 = x0 + inset, y0 + inset, x1 - inset, y1 - inset
-        rr = max(r - inset, 0)
-        if px < ix0 or px > ix1 or py < iy0 or py > iy1:
-            return False
-        cx = ix0 + rr if px < ix0 + rr else (ix1 - rr if px > ix1 - rr else px)
-        cy = iy0 + rr if py < iy0 + rr else (iy1 - rr if py > iy1 - rr else py)
-        if px < ix0 + rr and py < iy0 + rr:
-            return (px - (ix0 + rr)) ** 2 + (py - (iy0 + rr)) ** 2 <= rr * rr
-        if px > ix1 - rr and py < iy0 + rr:
-            return (px - (ix1 - rr)) ** 2 + (py - (iy0 + rr)) ** 2 <= rr * rr
-        if px < ix0 + rr and py > iy1 - rr:
-            return (px - (ix0 + rr)) ** 2 + (py - (iy1 - rr)) ** 2 <= rr * rr
-        if px > ix1 - rr and py > iy1 - rr:
-            return (px - (ix1 - rr)) ** 2 + (py - (iy1 - rr)) ** 2 <= rr * rr
-        return True
-    return inside
+def rounded_rect_inside(x, y, x0, y0, x1, y1, r, inset=0):
+    ix0, iy0, ix1, iy1 = x0 + inset, y0 + inset, x1 - inset, y1 - inset
+    rr = max(r - inset, 0)
+    if x < ix0 or x > ix1 or y < iy0 or y > iy1:
+        return False
+    if x < ix0 + rr and y < iy0 + rr:
+        return (x - (ix0 + rr)) ** 2 + (y - (iy0 + rr)) ** 2 <= rr * rr
+    if x > ix1 - rr and y < iy0 + rr:
+        return (x - (ix1 - rr)) ** 2 + (y - (iy0 + rr)) ** 2 <= rr * rr
+    if x < ix0 + rr and y > iy1 - rr:
+        return (x - (ix0 + rr)) ** 2 + (y - (iy1 - rr)) ** 2 <= rr * rr
+    if x > ix1 - rr and y > iy1 - rr:
+        return (x - (ix1 - rr)) ** 2 + (y - (iy1 - rr)) ** 2 <= rr * rr
+    return True
 
-def fill_poly(buf, poly, val=1):
-    """扫描线填充多边形（bbox内逐点测试）。"""
+def fill_poly(buf, poly):
+    """扫描线填充多边形（bbox内逐点奇偶测试）。"""
     xs = [p[0] for p in poly]
     ys = [p[1] for p in poly]
     x0, x1 = max(int(min(xs)), 0), min(int(max(xs)) + 1, W)
@@ -50,13 +50,13 @@ def fill_poly(buf, poly, val=1):
                         inside = not inside
                 j = i
             if inside:
-                buf[y * W + x] = val
+                buf[y * W + x] = 1
 
 def box_blur(src, radius, passes=2):
-    """可分离盒式模糊，近似高斯（积分图实现）。"""
+    """可分离盒式模糊（积分滑窗），近似高斯。"""
     out = list(src)
+    inv = 1.0 / (2 * radius + 1)
     for _ in range(passes):
-        # 水平
         tmp = [0.0] * (W * H)
         for y in range(H):
             row = y * W
@@ -64,30 +64,29 @@ def box_blur(src, radius, passes=2):
             for x in range(-radius, radius + 1):
                 acc += out[row + min(max(x, 0), W - 1)]
             for x in range(W):
-                tmp[row + x] = acc / (2 * radius + 1)
+                tmp[row + x] = acc * inv
                 acc -= out[row + min(max(x - radius, 0), W - 1)]
                 acc += out[row + min(max(x + radius + 1, 0), W - 1)]
-        # 垂直
         for x in range(W):
             acc = 0.0
             for y in range(-radius, radius + 1):
                 acc += tmp[min(max(y, 0), H - 1) * W + x]
             for y in range(H):
-                out[y * W + x] = acc / (2 * radius + 1)
+                out[y * W + x] = acc * inv
                 acc -= tmp[min(max(y - radius, 0), H - 1) * W + x]
                 acc += tmp[min(max(y + radius + 1, 0), H - 1) * W + x]
     return out
 
 # ---------- 7段码数字 ----------
 
-def seg_h_solid(x0, x1, y0, t):
-    """水平段：两端斜切的六边形。"""
+def seg_h(x0, x1, y0, t):
+    """水平段：两端斜切六边形。"""
     h = t // 2
     return [(x0 + h, y0), (x1 - h, y0), (x1, y0 + h), (x1 - h, y0 + t),
             (x0 + h, y0 + t), (x0, y0 + h)]
 
-def seg_v_solid(x0, y0, y1, t):
-    """垂直段：两端斜切的六边形。"""
+def seg_v(x0, y0, y1, t):
+    """垂直段：两端斜切六边形。"""
     h = t // 2
     return [(x0, y0 + h), (x0 + h, y0), (x0 + t, y0 + h), (x0 + t, y1 - h),
             (x0 + h, y1), (x0, y1 - h)]
@@ -107,101 +106,121 @@ DIGIT_SEGS = {
 }
 
 def draw_digit(mask, d, dx, dy, dw, dh, t):
-    """在 mask 上绘制一个7段码数字。"""
-    mask_on = DIGIT_SEGS[d]
+    on = DIGIT_SEGS[d]
     hm = t // 2
-    hx0, hx1 = dx + hm + 6, dx + dw - hm - 6      # 横段左右缩进
-    vy0 = dy + hm + 8                              # 上竖段起点
-    vy1 = dy + dh // 2 - t // 2 - 3                # 上竖段终点
-    vy2 = dy + dh // 2 + t // 2 + 3                # 下竖段起点
-    vy3 = dy + dh - hm - 8                         # 下竖段终点
+    hx0, hx1 = dx + hm + 7, dx + dw - hm - 7
+    vy0 = dy + hm + 9
+    vy1 = dy + dh // 2 - t // 2 - 4
+    vy2 = dy + dh // 2 + t // 2 + 4
+    vy3 = dy + dh - hm - 9
     lx, rx = dx, dx + dw - t
-    gy = dy + dh // 2 - t // 2                     # 中横段
-    if mask_on & 1:    fill_poly(mask, seg_h_solid(hx0, hx1, dy, t))
-    if mask_on & 64:   fill_poly(mask, seg_h_solid(hx0, hx1, gy, t))
-    if mask_on & 8:    fill_poly(mask, seg_h_solid(hx0, hx1, dy + dh - t, t))
-    if mask_on & 32:   fill_poly(mask, seg_v_solid(lx, vy0, vy1, t))
-    if mask_on & 2:    fill_poly(mask, seg_v_solid(rx, vy0, vy1, t))
-    if mask_on & 16:   fill_poly(mask, seg_v_solid(lx, vy2, vy3, t))
-    if mask_on & 4:    fill_poly(mask, seg_v_solid(rx, vy2, vy3, t))
+    gy = dy + dh // 2 - t // 2
+    if on & 1:
+        fill_poly(mask, seg_h(hx0, hx1, dy, t))
+    if on & 64:
+        fill_poly(mask, seg_h(hx0, hx1, gy, t))
+    if on & 8:
+        fill_poly(mask, seg_h(hx0, hx1, dy + dh - t, t))
+    if on & 32:
+        fill_poly(mask, seg_v(lx, vy0, vy1, t))
+    if on & 2:
+        fill_poly(mask, seg_v(rx, vy0, vy1, t))
+    if on & 16:
+        fill_poly(mask, seg_v(lx, vy2, vy3, t))
+    if on & 4:
+        fill_poly(mask, seg_v(rx, vy2, vy3, t))
 
 def main():
-    # 1) 背景：圆角矩形 + 表壳边环
+    radius = 128            # 圆角（192 尺度约 32）
+    ring_w = 16             # 表壳环宽（768 尺度）
+
+    # 1) alpha 蒙版：圆角方块
     alpha = bytearray(W * H)
-    ring = bytearray(W * H)
-    inside_outer = rounded_rect_mask(0, 0, W - 1, H - 1, 110 * S // 4)
-    inside_inner = rounded_rect_mask(0, 0, W - 1, H - 1, 110 * S // 4)
-    ring_px = 14  # 表壳环宽
     for y in range(H):
         for x in range(W):
-            if inside_outer(x, y):
+            if rounded_rect_inside(x, y, 0, 0, W - 1, H - 1, radius * S // 4):
                 alpha[y * W + x] = 255
-                if not inside_inner(x, y, ring_px):
-                    ring[y * W + x] = 1
 
-    # 2) 段码蒙版 "20:35"
+    # 2) 段码蒙版 "20:35"（更粗壮：120x216，厚度22）
     mask = bytearray(W * H)
-    dw, dh, t = 108, 200, 20
-    gap = 12
-    colon_w = 36
+    dw, dh, t = 120, 216, 22
+    gap, colon_w = 14, 40
     total = 4 * dw + colon_w + 4 * gap
-    x = (W - total) // 2
-    y0 = (H - dh) // 2 - 16
-    digits = [2, 0, 3, 5]
-    slots = [(x, digits[0]), (x + dw + gap, digits[1])]
-    xcolon = x + 2 * dw + gap + gap
-    slots.append((xcolon + colon_w + gap, digits[2]))
-    slots.append((xcolon + colon_w + gap + dw + gap, digits[3]))
-    for dx, d in slots:
-        draw_digit(mask, d, dx, y0, dw, dh, t)
-    # 冒号两点
-    cd = 20
-    cx = xcolon + (colon_w - cd) // 2
-    for yy in (y0 + dh // 2 - 34, y0 + dh // 2 + 14):
+    x0 = (W - total) // 2
+    y0 = (H - dh) // 2 - 14            # 视觉重心略上移
+    xs = [x0, x0 + dw + gap]
+    xc = x0 + 2 * dw + 2 * gap
+    xs += [xc + colon_w + gap, xc + colon_w + gap + dw + gap]
+    for i, d in enumerate([2, 0, 3, 5]):
+        draw_digit(mask, d, xs[i], y0, dw, dh, t)
+    # 冒号
+    cd = 24
+    cx = xc + (colon_w - cd) // 2
+    for yy in (y0 + dh // 2 - 40, y0 + dh // 2 + 16):
         fill_poly(mask, [(cx, yy), (cx + cd, yy), (cx + cd, yy + cd), (cx, yy + cd)])
 
-    # 3) 辉光
+    # 3) 双层辉光：宽晕 + 紧凑 bloom
     src = [float(v) for v in mask]
-    glow = box_blur(src, 14 * S // 4, passes=2)
+    glow_wide = box_blur(src, 26, passes=2)
+    glow_tight = box_blur(src, 8, passes=1)
 
     # 4) 合成
     rgb = bytearray(W * H * 3)
-    for i in range(W * H):
-        if alpha[i] == 0:
-            continue
-        if ring[i]:
-            rgb[i * 3] = rgb[i * 3 + 1] = rgb[i * 3 + 2] = 0x2a
-            continue
-        g = glow[i]
-        if mask[i]:
-            r, gg, b = 255, 42, 12
-        else:
-            r = int(255 * min(g * 0.85, 1.0))
-            gg = int(46 * min(g * 0.85, 1.0))
-            b = int(10 * min(g * 0.85, 1.0))
-        rgb[i * 3], rgb[i * 3 + 1], rgb[i * 3 + 2] = r, gg, b
+    ring_in = radius * S // 4
+    for y in range(H):
+        for x in range(W):
+            i = y * W + x
+            if alpha[i] == 0:
+                continue
+            in_ring = not rounded_rect_inside(x, y, 0, 0, W - 1, H - 1, radius * S // 4, ring_w)
+            if in_ring:
+                # 金属渐变：左上亮 → 右下暗（对角）
+                d = (x + y) / float(W + H - 2)
+                v = int(0x78 + (0x14 - 0x78) * d)
+                r = g = b = v
+            else:
+                # 屏幕内部：黑底 + 红色辉光 + 亮段
+                gw = min(glow_wide[i], 1.0)
+                gt = min(glow_tight[i], 1.0)
+                if mask[i]:
+                    r, g, b = 255, 46, 16
+                else:
+                    # 宽晕 + 紧凑bloom 叠加（红色）
+                    glow = min(gw * 0.72 + gt * 0.55, 1.0)
+                    r = int(255 * glow)
+                    g = int(58 * glow)
+                    b = int(14 * glow)
+            # 玻璃反光：左上→右下的对角高光带（4%白），亮段不受影响
+            if not mask[i]:
+                dnorm = (x + y) / float(W + H - 2)
+                if 0.24 < dnorm < 0.34:
+                    edge = 1.0 - abs(dnorm - 0.29) / 0.05
+                    add = int(14 * edge)
+                    r = min(r + add, 255)
+                    g = min(g + add, 255)
+                    b = min(b + add, 255)
+            rgb[i * 3] = r
+            rgb[i * 3 + 1] = g
+            rgb[i * 3 + 2] = b
 
-    # 5) 4x 下采样 → 192x192 RGBA
+    # 5) 4x 下采样 → 192x192 RGBA（alpha加权，边缘干净）
     out = bytearray()
     for y in range(N):
         out += b'\x00'
         for x in range(N):
             sr = sg = sb = sa = 0
             for dy in range(S):
-                row = (y * S + dy) * W + x * S
+                base = (y * S + dy) * W + x * S
                 for dx in range(S):
-                    i = row + dx
+                    i = base + dx
                     a = alpha[i]
                     if a:
                         sr += rgb[i * 3] * a
                         sg += rgb[i * 3 + 1] * a
                         sb += rgb[i * 3 + 2] * a
                     sa += a
-            cnt = S * S
             if sa:
-                a_avg = sa // cnt
-                pa = sa or 1
-                out += bytes((sr // pa, sg // pa, sb // pa, max(a_avg, 1) if a_avg else 0))
+                out += bytes((sr // sa, sg // sa, sb // sa, sa // (S * S)))
             else:
                 out += bytes((0, 0, 0, 0))
 
