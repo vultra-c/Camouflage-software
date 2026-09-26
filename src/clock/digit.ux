@@ -75,11 +75,11 @@
   .seg {
     position: absolute;
     border-radius: 2px;
-    background-color: #b4c2a5;
+    background-color: #160302;
   }
 
   .seg-on {
-    background-color: #2f3627;
+    background-color: #ff1e00;
   }
 
   /* 横段 20x10 */

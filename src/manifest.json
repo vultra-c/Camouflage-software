@@ -18,7 +18,7 @@
     "designWidth": 336
   },
   "display": {
-    "backgroundColor": "#c8d7b9"
+    "backgroundColor": "#000000"
   },
   "router": {
     "entry": "clock",

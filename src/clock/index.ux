@@ -1,5 +1,5 @@
 <template>
-  <!-- 整屏即一块"液晶表"：满屏灰绿液晶底 + 7段码数码字 -->
+  <!-- 整屏即一块"黑底红色LED表"：纯黑背景 + 红色发光7段码 -->
   <div class="lcd-screen" @click="handleTap">
 
     <!-- 第一行：日期 星期 -->
@@ -149,7 +149,7 @@
     top: 0px;
     right: 0px;
     bottom: 0px;
-    background-color: #c8d7b9;
+    background-color: #000000;
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -181,7 +181,7 @@
 
   .seg-text {
     font-family: monospace;
-    color: #2f3627;
+    color: #ff1e00;
   }
 
   .seg-small {
@@ -190,6 +190,6 @@
   }
 
   .seg-mode {
-    color: #3a422f;
+    color: #b31700;
   }
 </style>

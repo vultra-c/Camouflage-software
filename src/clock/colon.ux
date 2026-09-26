@@ -33,10 +33,10 @@
     width: 10px;
     height: 10px;
     border-radius: 2px;
-    background-color: #b4c2a5;
+    background-color: #160302;
   }
 
   .dot-on {
-    background-color: #2f3627;
+    background-color: #ff1e00;
   }
 </style>
