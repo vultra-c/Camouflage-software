@@ -1,11 +1,25 @@
 <template>
-  <!-- 整屏即一块"黑底红色LED表"：日期星期 / 超大 时:分 / 中号秒，全部内联渲染 -->
+  <!-- 整屏即一块"黑底红色LED表"：四角边框 + 状态栏 + 超大 时:分 + 中号秒 -->
   <div class="screen" @click="handleTap">
 
-    <!-- 第一行：日期 | 星期 -->
-    <div class="row-top">
-      <text class="led-text">{{ dateText }}</text>
-      <text class="led-text week-gap">{{ weekText }}</text>
+    <!-- 四角装饰边框（绝对定位，不占布局空间） -->
+    <div class="corner-h c-tl-h"></div>
+    <div class="corner-v c-tl-v"></div>
+    <div class="corner-h c-tr-h"></div>
+    <div class="corner-v c-tr-v"></div>
+    <div class="corner-h c-bl-h"></div>
+    <div class="corner-v c-bl-v"></div>
+    <div class="corner-h c-br-h"></div>
+    <div class="corner-v c-br-v"></div>
+
+    <!-- 第一行：分割线 + 日期 | 星期 + 分割线 -->
+    <div class="status-bar">
+      <div class="line"></div>
+      <div class="bar-row">
+        <text class="led-text">{{ dateText }}</text>
+        <text class="led-text week-gap">{{ weekText }}</text>
+      </div>
+      <div class="line"></div>
     </div>
 
     <!-- 第二行：超大 时:分 -->
@@ -236,10 +250,48 @@
     align-items: center;
   }
 
-  /* ===== 第一行：日期 星期 ===== */
-  .row-top {
+  /* ===== 四角装饰边框 ===== */
+  .corner-h {
+    position: absolute;
+    width: 26px;
+    height: 2px;
+    background-color: #3c0b07;
+  }
+
+  .corner-v {
+    position: absolute;
+    width: 2px;
+    height: 26px;
+    background-color: #3c0b07;
+  }
+
+  .c-tl-h { left: 20px; top: 24px; }
+  .c-tl-v { left: 20px; top: 24px; }
+  .c-tr-h { right: 20px; top: 24px; }
+  .c-tr-v { right: 20px; top: 24px; }
+  .c-bl-h { left: 20px; bottom: 24px; }
+  .c-bl-v { left: 20px; bottom: 24px; }
+  .c-br-h { right: 20px; bottom: 24px; }
+  .c-br-v { right: 20px; bottom: 24px; }
+
+  /* ===== 第一行：状态栏（分割线 + 日期 星期） ===== */
+  .status-bar {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .line {
+    width: 264px;
+    height: 1px;
+    background-color: #340809;
+  }
+
+  .bar-row {
+    width: 264px;
+    margin-top: 9px;
+    margin-bottom: 9px;
     flex-direction: row;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
   }
 
@@ -252,11 +304,12 @@
 
   .week-gap {
     margin-left: 28px;
+    color: #d41a00;
   }
 
-  /* ===== 第二行：超大 时:分（数字 118x210，屏宽336刚好放下4位+冒号） ===== */
+  /* ===== 第二行：超大 时:分（数字 68x130） ===== */
   .row-hm {
-    margin-top: 8px;
+    margin-top: 18px;
     flex-direction: row;
     justify-content: center;
     align-items: center;
@@ -264,10 +317,10 @@
 
   .digit-b {
     position: relative;
-    width: 62px;
-    height: 118px;
-    margin-left: 4px;
-    margin-right: 4px;
+    width: 68px;
+    height: 130px;
+    margin-left: 3px;
+    margin-right: 3px;
   }
 
   .seg {
@@ -276,45 +329,41 @@
     background-color: #160302;
   }
 
-  /* 大号数字：横段 42x14，竖段 14x48 */
-  .sba { left: 10px; top: 0px; width: 42px; height: 14px; }
-  .sbg { left: 10px; top: 52px; width: 42px; height: 14px; }
-  .sbd { left: 10px; top: 104px; width: 42px; height: 14px; }
-  .sbf { left: 0px; top: 14px; width: 14px; height: 38px; }
-  .sbb { left: 48px; top: 14px; width: 14px; height: 38px; }
-  .sbe { left: 0px; top: 66px; width: 14px; height: 38px; }
-  .sbc { left: 48px; top: 66px; width: 14px; height: 38px; }
+  /* 大号数字：横段 46x14，竖段 14x40 */
+  .sba { left: 11px; top: 0px; width: 46px; height: 14px; }
+  .sbg { left: 11px; top: 58px; width: 46px; height: 14px; }
+  .sbd { left: 11px; top: 116px; width: 46px; height: 14px; }
+  .sbf { left: 0px; top: 16px; width: 14px; height: 40px; }
+  .sbb { left: 54px; top: 16px; width: 14px; height: 40px; }
+  .sbe { left: 0px; top: 74px; width: 14px; height: 40px; }
+  .sbc { left: 54px; top: 74px; width: 14px; height: 40px; }
 
   .colon-b {
     width: 18px;
-    height: 118px;
-    margin-left: 2px;
-    margin-right: 2px;
+    height: 130px;
+    margin-left: 3px;
+    margin-right: 3px;
     flex-direction: column;
     justify-content: center;
     align-items: center;
   }
 
   .dot-b {
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
     border-radius: 3px;
     background-color: #160302;
   }
 
   .dot-b2 {
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
     border-radius: 3px;
     background-color: #160302;
-    margin-top: 40px;
-  }
-
-
-
-  /* ===== 第三行：秒（中号 54x96）+ 小冒号 ===== */
+    margin-top: 42px;
+  }  /* ===== 第三行：秒（中号 34x66）+ 小冒号 ===== */
   .row-sec {
-    margin-top: 10px;
+    margin-top: 20px;
     flex-direction: row;
     justify-content: center;
     align-items: center;
@@ -322,8 +371,8 @@
 
   .colon-s {
     width: 12px;
-    height: 96px;
-    margin-right: 10px;
+    height: 66px;
+    margin-right: 12px;
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -344,28 +393,27 @@
     margin-top: 32px;
   }
 
-
-
   .digit-s {
     position: relative;
-    width: 32px;
-    height: 62px;
+    width: 34px;
+    height: 66px;
     margin-left: 3px;
     margin-right: 3px;
   }
 
-  /* 中号数字：横段 22x9，竖段 9x25 */
-  .ssa { left: 5px; top: 0px; width: 22px; height: 9px; }
-  .ssg { left: 5px; top: 26px; width: 22px; height: 9px; }
-  .ssd { left: 5px; top: 53px; width: 22px; height: 9px; }
-  .ssf { left: 0px; top: 8px; width: 9px; height: 18px; }
-  .ssb { left: 23px; top: 8px; width: 9px; height: 18px; }
-  .sse { left: 0px; top: 35px; width: 9px; height: 18px; }
-  .ssc { left: 23px; top: 35px; width: 9px; height: 18px; }
+  /* 中号数字：横段 22x10，竖段 10x16 */
+  .ssa { left: 6px; top: 0px; width: 22px; height: 10px; }
+  .ssg { left: 6px; top: 28px; width: 22px; height: 10px; }
+  .ssd { left: 6px; top: 56px; width: 22px; height: 10px; }
+  .ssf { left: 0px; top: 11px; width: 10px; height: 16px; }
+  .ssb { left: 24px; top: 11px; width: 10px; height: 16px; }
+  .sse { left: 0px; top: 39px; width: 10px; height: 16px; }
+  .ssc { left: 24px; top: 39px; width: 10px; height: 16px; }
 
   /* 点亮色：Vela样式只支持单类选择器（复合选择器 .a.b 会被编译器丢弃），
      所以用独立的 .on 单类，并置于所有基础类之后以确保覆盖背景色 */
   .on {
     background-color: #ff1e00;
+    box-shadow: 0px 0px 10px rgba(255, 45, 0, 0.85);
   }
 </style>
