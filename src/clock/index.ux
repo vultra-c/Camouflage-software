@@ -276,10 +276,6 @@
     background-color: #160302;
   }
 
-  .seg.on {
-    background-color: #ff1e00;
-  }
-
   /* 大号数字：横段 42x14，竖段 14x48 */
   .sba { left: 10px; top: 0px; width: 42px; height: 14px; }
   .sbg { left: 10px; top: 52px; width: 42px; height: 14px; }
@@ -314,10 +310,7 @@
     margin-top: 40px;
   }
 
-  .dot-b.on,
-  .dot-b2.on {
-    background-color: #ff1e00;
-  }
+
 
   /* ===== 第三行：秒（中号 54x96）+ 小冒号 ===== */
   .row-sec {
@@ -351,10 +344,7 @@
     margin-top: 32px;
   }
 
-  .dot-s.on,
-  .dot-s2.on {
-    background-color: #ff1e00;
-  }
+
 
   .digit-s {
     position: relative;
@@ -372,4 +362,10 @@
   .ssb { left: 23px; top: 8px; width: 9px; height: 18px; }
   .sse { left: 0px; top: 35px; width: 9px; height: 18px; }
   .ssc { left: 23px; top: 35px; width: 9px; height: 18px; }
+
+  /* 点亮色：Vela样式只支持单类选择器（复合选择器 .a.b 会被编译器丢弃），
+     所以用独立的 .on 单类，并置于所有基础类之后以确保覆盖背景色 */
+  .on {
+    background-color: #ff1e00;
+  }
 </style>
