@@ -1,25 +1,11 @@
 <template>
-  <!-- 整屏即一块"黑底红色LED表"：四角边框 + 状态栏 + 超大 时:分 + 中号秒 -->
+  <!-- 整屏即一块"黑底红色LED表"：纯净黑底 + 日期星期 + 超大 时:分 + 中号秒 -->
   <div class="screen" @click="handleTap">
 
-    <!-- 四角装饰边框（绝对定位，不占布局空间） -->
-    <div class="corner-h c-tl-h"></div>
-    <div class="corner-v c-tl-v"></div>
-    <div class="corner-h c-tr-h"></div>
-    <div class="corner-v c-tr-v"></div>
-    <div class="corner-h c-bl-h"></div>
-    <div class="corner-v c-bl-v"></div>
-    <div class="corner-h c-br-h"></div>
-    <div class="corner-v c-br-v"></div>
-
-    <!-- 第一行：分割线 + 日期 | 星期 + 分割线 -->
-    <div class="status-bar">
-      <div class="line"></div>
-      <div class="bar-row">
-        <text class="led-text">{{ dateText }}</text>
-        <text class="led-text week-gap">{{ weekText }}</text>
-      </div>
-      <div class="line"></div>
+    <!-- 第一行：日期 | 星期 -->
+    <div class="bar-row">
+      <text class="led-text">{{ dateText }}</text>
+      <text class="led-text week-gap">{{ weekText }}</text>
     </div>
 
     <!-- 第二行：超大 时:分 -->
@@ -250,46 +236,9 @@
     align-items: center;
   }
 
-  /* ===== 四角装饰边框 ===== */
-  .corner-h {
-    position: absolute;
-    width: 26px;
-    height: 2px;
-    background-color: #3c0b07;
-  }
-
-  .corner-v {
-    position: absolute;
-    width: 2px;
-    height: 26px;
-    background-color: #3c0b07;
-  }
-
-  .c-tl-h { left: 20px; top: 24px; }
-  .c-tl-v { left: 20px; top: 24px; }
-  .c-tr-h { right: 20px; top: 24px; }
-  .c-tr-v { right: 20px; top: 24px; }
-  .c-bl-h { left: 20px; bottom: 24px; }
-  .c-bl-v { left: 20px; bottom: 24px; }
-  .c-br-h { right: 20px; bottom: 24px; }
-  .c-br-v { right: 20px; bottom: 24px; }
-
-  /* ===== 第一行：状态栏（分割线 + 日期 星期） ===== */
-  .status-bar {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .line {
-    width: 264px;
-    height: 1px;
-    background-color: #340809;
-  }
-
+  /* ===== 第一行：日期 星期 ===== */
   .bar-row {
     width: 264px;
-    margin-top: 9px;
-    margin-bottom: 9px;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
@@ -326,7 +275,7 @@
   .seg {
     position: absolute;
     border-radius: 3px;
-    background-color: #160302;
+    background-color: #000000;
   }
 
   /* 大号数字：横段 46x14，竖段 14x40 */
@@ -352,14 +301,14 @@
     width: 14px;
     height: 14px;
     border-radius: 3px;
-    background-color: #160302;
+    background-color: #000000;
   }
 
   .dot-b2 {
     width: 14px;
     height: 14px;
     border-radius: 3px;
-    background-color: #160302;
+    background-color: #000000;
     margin-top: 42px;
   }  /* ===== 第三行：秒（中号 34x66）+ 小冒号 ===== */
   .row-sec {
@@ -382,14 +331,14 @@
     width: 9px;
     height: 9px;
     border-radius: 2px;
-    background-color: #160302;
+    background-color: #000000;
   }
 
   .dot-s2 {
     width: 9px;
     height: 9px;
     border-radius: 2px;
-    background-color: #160302;
+    background-color: #000000;
     margin-top: 32px;
   }
 
