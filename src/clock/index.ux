@@ -1,51 +1,121 @@
 <template>
-  <!-- 整屏即一块"黑底红色LED表"：纯黑背景 + 红色发光7段码 -->
-  <div class="lcd-screen" @click="handleTap">
+  <!-- 整屏即一块"黑底红色LED表"：日期星期 / 超大 时:分 / 中号秒，全部内联渲染 -->
+  <div class="screen" @click="handleTap">
 
-    <!-- 第一行：日期 星期 -->
-    <div class="lcd-row-top">
-      <text class="seg-text seg-small">{{ dateText }}</text>
-      <text class="seg-text seg-small seg-week">{{ weekText }}</text>
+    <!-- 第一行：日期 | 星期 -->
+    <div class="row-top">
+      <text class="led-text">{{ dateText }}</text>
+      <text class="led-text week-gap">{{ weekText }}</text>
     </div>
 
-    <!-- 第二行：HH:MM:SS，冒号为段码圆点 -->
-    <div class="lcd-row-time">
-      <digit value="{{ h1 }}"></digit>
-      <digit value="{{ h2 }}"></digit>
-      <colon blink="{{ blink }}"></colon>
-      <digit value="{{ m1 }}"></digit>
-      <digit value="{{ m2 }}"></digit>
-      <colon blink="{{ blink }}"></colon>
-      <digit value="{{ s1 }}"></digit>
-      <digit value="{{ s2 }}"></digit>
+    <!-- 第二行：超大 时:分 -->
+    <div class="row-hm">
+      <!-- 时十位 -->
+      <div class="digit-b">
+        <div class="seg sba {{ h1a ? 'on' : '' }}"></div>
+        <div class="seg sbb {{ h1b ? 'on' : '' }}"></div>
+        <div class="seg sbc {{ h1c ? 'on' : '' }}"></div>
+        <div class="seg sbd {{ h1d ? 'on' : '' }}"></div>
+        <div class="seg sbe {{ h1e ? 'on' : '' }}"></div>
+        <div class="seg sbf {{ h1f ? 'on' : '' }}"></div>
+        <div class="seg sbg {{ h1g ? 'on' : '' }}"></div>
+      </div>
+      <!-- 时个位 -->
+      <div class="digit-b">
+        <div class="seg sba {{ h2a ? 'on' : '' }}"></div>
+        <div class="seg sbb {{ h2b ? 'on' : '' }}"></div>
+        <div class="seg sbc {{ h2c ? 'on' : '' }}"></div>
+        <div class="seg sbd {{ h2d ? 'on' : '' }}"></div>
+        <div class="seg sbe {{ h2e ? 'on' : '' }}"></div>
+        <div class="seg sbf {{ h2f ? 'on' : '' }}"></div>
+        <div class="seg sbg {{ h2g ? 'on' : '' }}"></div>
+      </div>
+      <!-- 冒号 -->
+      <div class="colon-b">
+        <div class="dot-b {{ blink ? 'on' : '' }}"></div>
+        <div class="dot-b2 {{ blink ? 'on' : '' }}"></div>
+      </div>
+      <!-- 分十位 -->
+      <div class="digit-b">
+        <div class="seg sba {{ m1a ? 'on' : '' }}"></div>
+        <div class="seg sbb {{ m1b ? 'on' : '' }}"></div>
+        <div class="seg sbc {{ m1c ? 'on' : '' }}"></div>
+        <div class="seg sbd {{ m1d ? 'on' : '' }}"></div>
+        <div class="seg sbe {{ m1e ? 'on' : '' }}"></div>
+        <div class="seg sbf {{ m1f ? 'on' : '' }}"></div>
+        <div class="seg sbg {{ m1g ? 'on' : '' }}"></div>
+      </div>
+      <!-- 分个位 -->
+      <div class="digit-b">
+        <div class="seg sba {{ m2a ? 'on' : '' }}"></div>
+        <div class="seg sbb {{ m2b ? 'on' : '' }}"></div>
+        <div class="seg sbc {{ m2c ? 'on' : '' }}"></div>
+        <div class="seg sbd {{ m2d ? 'on' : '' }}"></div>
+        <div class="seg sbe {{ m2e ? 'on' : '' }}"></div>
+        <div class="seg sbf {{ m2f ? 'on' : '' }}"></div>
+        <div class="seg sbg {{ m2g ? 'on' : '' }}"></div>
+      </div>
     </div>
 
-    <!-- 第三行：24H 标记 -->
-    <div class="lcd-row-bottom">
-      <text class="seg-text seg-small seg-mode">24H</text>
+    <!-- 第三行：秒（中号，左侧冒号跟随闪烁） -->
+    <div class="row-sec">
+      <div class="colon-s">
+        <div class="dot-s {{ blink ? 'on' : '' }}"></div>
+        <div class="dot-s2 {{ blink ? 'on' : '' }}"></div>
+      </div>
+      <!-- 秒十位 -->
+      <div class="digit-s">
+        <div class="seg ssa {{ s1a ? 'on' : '' }}"></div>
+        <div class="seg ssb {{ s1b ? 'on' : '' }}"></div>
+        <div class="seg ssc {{ s1c ? 'on' : '' }}"></div>
+        <div class="seg ssd {{ s1d ? 'on' : '' }}"></div>
+        <div class="seg sse {{ s1e ? 'on' : '' }}"></div>
+        <div class="seg ssf {{ s1f ? 'on' : '' }}"></div>
+        <div class="seg ssg {{ s1g ? 'on' : '' }}"></div>
+      </div>
+      <!-- 秒个位 -->
+      <div class="digit-s">
+        <div class="seg ssa {{ s2a ? 'on' : '' }}"></div>
+        <div class="seg ssb {{ s2b ? 'on' : '' }}"></div>
+        <div class="seg ssc {{ s2c ? 'on' : '' }}"></div>
+        <div class="seg ssd {{ s2d ? 'on' : '' }}"></div>
+        <div class="seg sse {{ s2e ? 'on' : '' }}"></div>
+        <div class="seg ssf {{ s2f ? 'on' : '' }}"></div>
+        <div class="seg ssg {{ s2g ? 'on' : '' }}"></div>
+      </div>
     </div>
 
   </div>
 </template>
 
-<import name="digit" src="./digit.ux"></import>
-<import name="colon" src="./colon.ux"></import>
-
 <script>
   import app from '@system.app'
 
   const WEEKS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
+  // 段码掩码：a=64 b=32 c=16 d=8 e=4 f=2 g=1
+  const SEG = {
+    0: 64 + 32 + 16 + 8 + 4 + 2,
+    1: 32 + 16,
+    2: 64 + 32 + 1 + 4 + 8,
+    3: 64 + 32 + 1 + 16 + 8,
+    4: 32 + 2 + 1 + 16,
+    5: 64 + 2 + 1 + 16 + 8,
+    6: 64 + 2 + 1 + 16 + 8 + 4,
+    7: 64 + 32 + 16,
+    8: 64 + 32 + 16 + 8 + 4 + 2 + 1,
+    9: 64 + 32 + 16 + 8 + 2 + 1
+  }
   const EXIT_TAPS = 10
   const EXIT_WINDOW_MS = 6000
 
   export default {
     data: {
-      h1: 0,
-      h2: 0,
-      m1: 0,
-      m2: 0,
-      s1: 0,
-      s2: 0,
+      h1a: false, h1b: false, h1c: false, h1d: false, h1e: false, h1f: false, h1g: false,
+      h2a: false, h2b: false, h2c: false, h2d: false, h2e: false, h2f: false, h2g: false,
+      m1a: false, m1b: false, m1c: false, m1d: false, m1e: false, m1f: false, m1g: false,
+      m2a: false, m2b: false, m2c: false, m2d: false, m2e: false, m2f: false, m2g: false,
+      s1a: false, s1b: false, s1c: false, s1d: false, s1e: false, s1f: false, s1g: false,
+      s2a: false, s2b: false, s2c: false, s2d: false, s2e: false, s2f: false, s2g: false,
       blink: true,
       dateText: '01-01',
       weekText: 'SUN',
@@ -98,12 +168,12 @@
       const m = now.getMinutes()
       const s = now.getSeconds()
 
-      this.h1 = Math.floor(h / 10)
-      this.h2 = h % 10
-      this.m1 = Math.floor(m / 10)
-      this.m2 = m % 10
-      this.s1 = Math.floor(s / 10)
-      this.s2 = s % 10
+      this.setDigit('h1', Math.floor(h / 10))
+      this.setDigit('h2', h % 10)
+      this.setDigit('m1', Math.floor(m / 10))
+      this.setDigit('m2', m % 10)
+      this.setDigit('s1', Math.floor(s / 10))
+      this.setDigit('s2', s % 10)
       this.blink = s % 2 === 0
 
       const mo = now.getMonth() + 1
@@ -112,7 +182,18 @@
       this.weekText = WEEKS[now.getDay()]
     },
 
-    // 唯一退出方式：6秒内连续点击屏幕（时间）10次，应用静默退出
+    setDigit(prefix, v) {
+      const mask = SEG[v] || 0
+      this[prefix + 'a'] = (mask & 64) !== 0
+      this[prefix + 'b'] = (mask & 32) !== 0
+      this[prefix + 'c'] = (mask & 16) !== 0
+      this[prefix + 'd'] = (mask & 8) !== 0
+      this[prefix + 'e'] = (mask & 4) !== 0
+      this[prefix + 'f'] = (mask & 2) !== 0
+      this[prefix + 'g'] = (mask & 1) !== 0
+    },
+
+    // 唯一退出方式：6秒内连续点击屏幕10次，应用静默退出
     handleTap() {
       this.tapCount = this.tapCount + 1
 
@@ -143,7 +224,7 @@
 </script>
 
 <style>
-  .lcd-screen {
+  .screen {
     position: absolute;
     left: 0px;
     top: 0px;
@@ -155,41 +236,140 @@
     align-items: center;
   }
 
-  .lcd-row-top {
+  /* ===== 第一行：日期 星期 ===== */
+  .row-top {
     flex-direction: row;
     justify-content: center;
     align-items: center;
   }
 
-  .seg-week {
-    margin-left: 24px;
-  }
-
-  .lcd-row-time {
-    margin-top: 20px;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .lcd-row-bottom {
-    margin-top: 20px;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-  }
-
-  .seg-text {
+  .led-text {
     font-family: monospace;
+    font-size: 44px;
+    font-weight: bold;
     color: #ff1e00;
   }
 
-  .seg-small {
-    font-size: 30px;
-    font-weight: bold;
+  .week-gap {
+    margin-left: 28px;
   }
 
-  .seg-mode {
-    color: #b31700;
+  /* ===== 第二行：超大 时:分（数字 118x210，屏宽336刚好放下4位+冒号） ===== */
+  .row-hm {
+    margin-top: 8px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
   }
+
+  .digit-b {
+    position: relative;
+    width: 62px;
+    height: 118px;
+    margin-left: 4px;
+    margin-right: 4px;
+  }
+
+  .seg {
+    position: absolute;
+    border-radius: 3px;
+    background-color: #160302;
+  }
+
+  .seg.on {
+    background-color: #ff1e00;
+  }
+
+  /* 大号数字：横段 42x14，竖段 14x48 */
+  .sba { left: 10px; top: 0px; width: 42px; height: 14px; }
+  .sbg { left: 10px; top: 52px; width: 42px; height: 14px; }
+  .sbd { left: 10px; top: 104px; width: 42px; height: 14px; }
+  .sbf { left: 0px; top: 14px; width: 14px; height: 38px; }
+  .sbb { left: 48px; top: 14px; width: 14px; height: 38px; }
+  .sbe { left: 0px; top: 66px; width: 14px; height: 38px; }
+  .sbc { left: 48px; top: 66px; width: 14px; height: 38px; }
+
+  .colon-b {
+    width: 18px;
+    height: 118px;
+    margin-left: 2px;
+    margin-right: 2px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .dot-b {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    background-color: #160302;
+  }
+
+  .dot-b2 {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    background-color: #160302;
+    margin-top: 40px;
+  }
+
+  .dot-b.on,
+  .dot-b2.on {
+    background-color: #ff1e00;
+  }
+
+  /* ===== 第三行：秒（中号 54x96）+ 小冒号 ===== */
+  .row-sec {
+    margin-top: 10px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .colon-s {
+    width: 12px;
+    height: 96px;
+    margin-right: 10px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .dot-s {
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    background-color: #160302;
+  }
+
+  .dot-s2 {
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    background-color: #160302;
+    margin-top: 32px;
+  }
+
+  .dot-s.on,
+  .dot-s2.on {
+    background-color: #ff1e00;
+  }
+
+  .digit-s {
+    position: relative;
+    width: 32px;
+    height: 62px;
+    margin-left: 3px;
+    margin-right: 3px;
+  }
+
+  /* 中号数字：横段 22x9，竖段 9x25 */
+  .ssa { left: 5px; top: 0px; width: 22px; height: 9px; }
+  .ssg { left: 5px; top: 26px; width: 22px; height: 9px; }
+  .ssd { left: 5px; top: 53px; width: 22px; height: 9px; }
+  .ssf { left: 0px; top: 8px; width: 9px; height: 18px; }
+  .ssb { left: 23px; top: 8px; width: 9px; height: 18px; }
+  .sse { left: 0px; top: 35px; width: 9px; height: 18px; }
+  .ssc { left: 23px; top: 35px; width: 9px; height: 18px; }
 </style>
