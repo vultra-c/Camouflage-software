@@ -1,0 +1,95 @@
+<template>
+  <!-- 7段码单个数字：a/g/d 为横段，f/b/e/c 为竖段 -->
+  <div class="digit">
+    <div class="seg seg-a {{ segA ? 'seg-on' : '' }}"></div>
+    <div class="seg seg-b {{ segB ? 'seg-on' : '' }}"></div>
+    <div class="seg seg-c {{ segC ? 'seg-on' : '' }}"></div>
+    <div class="seg seg-d {{ segD ? 'seg-on' : '' }}"></div>
+    <div class="seg seg-e {{ segE ? 'seg-on' : '' }}"></div>
+    <div class="seg seg-f {{ segF ? 'seg-on' : '' }}"></div>
+    <div class="seg seg-g {{ segG ? 'seg-on' : '' }}"></div>
+  </div>
+</template>
+
+<script>
+  // 段码掩码：a=64 b=32 c=16 d=8 e=4 f=2 g=1
+  const SEG = {
+    0: 64 + 32 + 16 + 8 + 4 + 2,
+    1: 32 + 16,
+    2: 64 + 32 + 1 + 4 + 8,
+    3: 64 + 32 + 1 + 16 + 8,
+    4: 32 + 2 + 1 + 16,
+    5: 64 + 2 + 1 + 16 + 8,
+    6: 64 + 2 + 1 + 16 + 8 + 4,
+    7: 64 + 32 + 16,
+    8: 64 + 32 + 16 + 8 + 4 + 2 + 1,
+    9: 64 + 32 + 16 + 8 + 2 + 1
+  }
+
+  export default {
+    props: ['value'],
+
+    computed: {
+      segA() {
+        return this.bit(64)
+      },
+      segB() {
+        return this.bit(32)
+      },
+      segC() {
+        return this.bit(16)
+      },
+      segD() {
+        return this.bit(8)
+      },
+      segE() {
+        return this.bit(4)
+      },
+      segF() {
+        return this.bit(2)
+      },
+      segG() {
+        return this.bit(1)
+      }
+    },
+
+    bit(seg) {
+      const v = SEG[this.value]
+      if (v === undefined) {
+        return false
+      }
+      return (v & seg) !== 0
+    }
+  }
+</script>
+
+<style>
+  .digit {
+    position: relative;
+    width: 44px;
+    height: 90px;
+    margin-left: 2px;
+    margin-right: 2px;
+  }
+
+  .seg {
+    position: absolute;
+    border-radius: 2px;
+    background-color: #b4c2a5;
+  }
+
+  .seg-on {
+    background-color: #2f3627;
+  }
+
+  /* 横段 20x10 */
+  .seg-a { left: 12px; top: 0px; width: 20px; height: 10px; }
+  .seg-g { left: 12px; top: 40px; width: 20px; height: 10px; }
+  .seg-d { left: 12px; top: 80px; width: 20px; height: 10px; }
+
+  /* 竖段 10x26 */
+  .seg-f { left: 0px; top: 12px; width: 10px; height: 26px; }
+  .seg-b { left: 34px; top: 12px; width: 10px; height: 26px; }
+  .seg-e { left: 0px; top: 52px; width: 10px; height: 26px; }
+  .seg-c { left: 34px; top: 52px; width: 10px; height: 26px; }
+</style>

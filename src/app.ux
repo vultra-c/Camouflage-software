@@ -1,0 +1,10 @@
+<script>
+  export default {
+    onCreate() {
+      console.log('LCD时钟: app onCreate')
+    },
+    onDestroy() {
+      console.log('LCD时钟: app onDestroy')
+    }
+  }
+</script>

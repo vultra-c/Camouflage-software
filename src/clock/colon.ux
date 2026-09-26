@@ -1,0 +1,42 @@
+<template>
+  <!-- 段码冒号：上下两个方形光点，随秒闪烁（模拟真实电子表） -->
+  <div class="colon">
+    <div class="dot {{ on ? 'dot-on' : '' }}" style="margin-top: 18px"></div>
+    <div class="dot {{ on ? 'dot-on' : '' }}" style="margin-top: 30px"></div>
+  </div>
+</template>
+
+<script>
+  export default {
+    props: ['blink'],
+
+    computed: {
+      on() {
+        return this.blink !== false
+      }
+    }
+  }
+</script>
+
+<style>
+  .colon {
+    width: 14px;
+    height: 90px;
+    margin-left: 3px;
+    margin-right: 3px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    background-color: #b4c2a5;
+  }
+
+  .dot-on {
+    background-color: #2f3627;
+  }
+</style>

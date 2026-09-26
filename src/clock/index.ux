@@ -1,0 +1,195 @@
+<template>
+  <!-- 整屏即一块"液晶表"：满屏灰绿液晶底 + 7段码数码字 -->
+  <div class="lcd-screen" @click="handleTap">
+
+    <!-- 第一行：日期 星期 -->
+    <div class="lcd-row-top">
+      <text class="seg-text seg-small">{{ dateText }}</text>
+      <text class="seg-text seg-small seg-week">{{ weekText }}</text>
+    </div>
+
+    <!-- 第二行：HH:MM:SS，冒号为段码圆点 -->
+    <div class="lcd-row-time">
+      <digit value="{{ h1 }}"></digit>
+      <digit value="{{ h2 }}"></digit>
+      <colon blink="{{ blink }}"></colon>
+      <digit value="{{ m1 }}"></digit>
+      <digit value="{{ m2 }}"></digit>
+      <colon blink="{{ blink }}"></colon>
+      <digit value="{{ s1 }}"></digit>
+      <digit value="{{ s2 }}"></digit>
+    </div>
+
+    <!-- 第三行：24H 标记 -->
+    <div class="lcd-row-bottom">
+      <text class="seg-text seg-small seg-mode">24H</text>
+    </div>
+
+  </div>
+</template>
+
+<import name="digit" src="./digit.ux"></import>
+<import name="colon" src="./colon.ux"></import>
+
+<script>
+  import app from '@system.app'
+
+  const WEEKS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
+  const EXIT_TAPS = 10
+  const EXIT_WINDOW_MS = 6000
+
+  export default {
+    data: {
+      h1: 0,
+      h2: 0,
+      m1: 0,
+      m2: 0,
+      s1: 0,
+      s2: 0,
+      blink: true,
+      dateText: '01-01',
+      weekText: 'SUN',
+      tapCount: 0
+    },
+
+    timer: null,
+    exitTimer: null,
+
+    onInit() {
+      this.refreshTime()
+    },
+
+    onReady() {
+      this.startTimer()
+    },
+
+    onShow() {
+      this.refreshTime()
+      this.startTimer()
+    },
+
+    onHide() {
+      this.stopTimer()
+    },
+
+    onDestroy() {
+      this.stopTimer()
+    },
+
+    startTimer() {
+      if (this.timer) {
+        return
+      }
+      this.timer = setInterval(() => {
+        this.refreshTime()
+      }, 1000)
+    },
+
+    stopTimer() {
+      if (this.timer) {
+        clearInterval(this.timer)
+        this.timer = null
+      }
+    },
+
+    refreshTime() {
+      const now = new Date()
+      const h = now.getHours()
+      const m = now.getMinutes()
+      const s = now.getSeconds()
+
+      this.h1 = Math.floor(h / 10)
+      this.h2 = h % 10
+      this.m1 = Math.floor(m / 10)
+      this.m2 = m % 10
+      this.s1 = Math.floor(s / 10)
+      this.s2 = s % 10
+      this.blink = s % 2 === 0
+
+      const mo = now.getMonth() + 1
+      const d = now.getDate()
+      this.dateText = (mo < 10 ? '0' + mo : '' + mo) + '-' + (d < 10 ? '0' + d : '' + d)
+      this.weekText = WEEKS[now.getDay()]
+    },
+
+    // 唯一退出方式：6秒内连续点击屏幕（时间）10次，应用静默退出
+    handleTap() {
+      this.tapCount = this.tapCount + 1
+
+      if (this.exitTimer) {
+        clearTimeout(this.exitTimer)
+      }
+      this.exitTimer = setTimeout(() => {
+        this.tapCount = 0
+        this.exitTimer = null
+      }, EXIT_WINDOW_MS)
+
+      if (this.tapCount >= EXIT_TAPS) {
+        this.tapCount = 0
+        if (this.exitTimer) {
+          clearTimeout(this.exitTimer)
+          this.exitTimer = null
+        }
+        this.stopTimer()
+        app.terminate()
+      }
+    },
+
+    // 拦截右滑/返回键：无论怎么滑都退不出去
+    onBackPress() {
+      return true
+    }
+  }
+</script>
+
+<style>
+  .lcd-screen {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    background-color: #c8d7b9;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .lcd-row-top {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .seg-week {
+    margin-left: 24px;
+  }
+
+  .lcd-row-time {
+    margin-top: 20px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .lcd-row-bottom {
+    margin-top: 20px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .seg-text {
+    font-family: monospace;
+    color: #2f3627;
+  }
+
+  .seg-small {
+    font-size: 30px;
+    font-weight: bold;
+  }
+
+  .seg-mode {
+    color: #3a422f;
+  }
+</style>
